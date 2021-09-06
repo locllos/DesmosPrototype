@@ -3,8 +3,7 @@
 void constructCoordinateSystem(CoordinateSystem* coord_system, 
                                int x_pos, int y_pos, 
                                int width, int height,
-                               SDL_Point origin_point,
-                               SDL_Point min_coord, SDL_Point max_coord)
+                               Point min_coord, Point max_coord)
 {
     coord_system->area.x = x_pos;
     coord_system->area.y = y_pos;
@@ -12,24 +11,24 @@ void constructCoordinateSystem(CoordinateSystem* coord_system,
     coord_system->area.h = height;
     coord_system->area.w = width;
     
-    coord_system->abs_origin_point = { origin_point.x + coord_system->area.x, 
-                                       origin_point.y + coord_system->area.y };
-
     coord_system->min_coord = min_coord;
     coord_system->max_coord = max_coord;
 
-    coord_system->x_scale = (max_coord.x - min_coord.x) / width;
-    coord_system->y_scale = (max_coord.y - min_coord.y) / height;
+    coord_system->x_scale = width  / (max_coord.x - min_coord.x);
+    coord_system->y_scale = height / (max_coord.y - min_coord.y);
+
+    coord_system->abs_origin_point = { (int)(coord_system->x_scale * abs(coord_system->min_coord.x)) + coord_system->area.x, 
+                                       (int)(coord_system->y_scale * abs(coord_system->max_coord.y)) + coord_system->area.y };
+
 }
 
 CoordinateSystem* newCoordinateSystem(int x_pos, int y_pos, 
                                       int width, int height,
-                                      SDL_Point origin_point, 
-                                      SDL_Point min_coord, SDL_Point max_coord)
+                                      Point min_coord, Point max_coord)
 {
     CoordinateSystem* coord_system = (CoordinateSystem*)calloc(1, sizeof(CoordinateSystem));
 
-    constructCoordinateSystem(coord_system, x_pos, y_pos, width, height, origin_point, min_coord, max_coord);
+    constructCoordinateSystem(coord_system, x_pos, y_pos, width, height, min_coord, max_coord);
 
     return coord_system;
 }

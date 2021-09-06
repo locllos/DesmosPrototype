@@ -24,11 +24,11 @@ int main()
     
     Display* display = newDisplay("Privet Medved!");
     
-    CoordinateSystem* coord_system_a = newCoordinateSystem(25, 25, 400, 400, {200, 200}, 25);
+    CoordinateSystem* coord_system_a = newCoordinateSystem(25, 25, 400, 400, {-3, -3}, {5, 5});
     drawCoordinateSystem(display, coord_system_a, {255, 255, 255, 255}, {0, 0, 0, 255});
     drawCoordinateFunction(display, coord_system_a, RED, functionParabola, 0.1);
 
-    CoordinateSystem* coord_system_b = newCoordinateSystem(450, 25, 300, 300, {25, 200}, 100);
+    CoordinateSystem* coord_system_b = newCoordinateSystem(450, 25, 300, 300, {-1, -1}, {2, 2});
     drawCoordinateSystem(display, coord_system_b, {255, 255, 255, 255}, {0, 0, 0, 255});
     drawCoordinateFunction(display, coord_system_b, RED, functionParabola, 0.05);
 

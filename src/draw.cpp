@@ -5,7 +5,6 @@ const double PI = 3.14159265359;
 const char* DIGIT_FONT = "res/Fonts/TerminusTTF.ttf";
 const size_t DEFAULT_FONT_SCALE = 2;
 const double ARROW_ANGLE = PI / 12;
-const double ARROW_FACTOR_SIZE = 0.1;
 
 void drawDot(Display* display, CoordinateSystem* coord_system, SDL_Color color, Point point)
 {
@@ -52,21 +51,23 @@ void drawLine(Display* display,
 }
 
 void drawVector(Display* display, CoordinateSystem* coord_system, SDL_Color color, 
-                Point begin_point, Vector vector)
+                Point begin_point, Vector vector, double arrow_factor_size)
 {   
     SDL_SetRenderDrawColor(display->renderer, color);
 
     Point first = begin_point;
     Point second = {begin_point.x + vector.x_component, begin_point.y + vector.y_component};
 
-    Point first_arrow_point  = { second.x + 0.1 * ((first.x - second.x) * cos(ARROW_ANGLE) + 
+    // Arrow Factor Size, просто чтобы формула не была слишком длинной
+    double afs = arrow_factor_size;
+    Point first_arrow_point  = { second.x + afs * ((first.x - second.x) * cos(ARROW_ANGLE) + 
                                                    (first.y - second.y) * sin(ARROW_ANGLE)),
-                                 second.y + 0.1 * ((first.y - second.y) * cos(ARROW_ANGLE) - 
+                                 second.y + afs * ((first.y - second.y) * cos(ARROW_ANGLE) - 
                                                    (first.x - second.x) * sin(ARROW_ANGLE))};
     
-    Point second_arrow_point = { second.x + 0.1 * ((first.x - second.x) * cos(ARROW_ANGLE) -
+    Point second_arrow_point = { second.x + afs * ((first.x - second.x) * cos(ARROW_ANGLE) -
                                                    (first.y - second.y) * sin(ARROW_ANGLE)),
-                                 second.y + 0.1 * ((first.y - second.y) * cos(ARROW_ANGLE) + 
+                                 second.y + afs * ((first.y - second.y) * cos(ARROW_ANGLE) + 
                                                    (first.x - second.x) * sin(ARROW_ANGLE))};
     
     SDL_Point abs_first_vector_point = getAbsCoordinatesFromRelative(coord_system, first);
@@ -74,7 +75,6 @@ void drawVector(Display* display, CoordinateSystem* coord_system, SDL_Color colo
     SDL_Point abs_first_arrow_point = getAbsCoordinatesFromRelative(coord_system, first_arrow_point);
     SDL_Point abs_second_arrow_point = getAbsCoordinatesFromRelative(coord_system, second_arrow_point);
 
-    drawDot(display, coord_system, {0, 0, 0, 255}, begin_point);
     drawLine(display, abs_first_vector_point, abs_second_vector_point);
     drawLine(display, abs_second_vector_point, abs_first_arrow_point);
     drawLine(display, abs_second_vector_point, abs_second_arrow_point);
@@ -89,18 +89,18 @@ void drawCoordinateStepY(Display* display, CoordinateSystem* coord_system)
     int scale = coord_system->y_scale;
     int current_pos = abs_origin_point.y;
 
-    while (current_pos + scale < y_coord_line_point_b.y)
+    while (current_pos < y_coord_line_point_b.y)
     {
-        drawLine(display, {abs_origin_point.x - 2, current_pos + scale}, 
-                          {abs_origin_point.x + 2, current_pos + scale}, 3);
+        drawLine(display, {abs_origin_point.x - 2, current_pos}, 
+                          {abs_origin_point.x + 2, current_pos});
         current_pos += scale;
     }
 
     current_pos = abs_origin_point.y;
-    while (current_pos - scale > y_coord_line_point_a.y)
+    while (current_pos > y_coord_line_point_a.y)
     {
-        drawLine(display, {abs_origin_point.x - 2, current_pos - scale}, 
-                          {abs_origin_point.x + 2, current_pos - scale}, 3);
+        drawLine(display, {abs_origin_point.x - 2, current_pos}, 
+                          {abs_origin_point.x + 2, current_pos});
         current_pos -= scale;
     }
 
@@ -116,7 +116,7 @@ void drawCoordinateStepX(Display* display, CoordinateSystem* coord_system)
     int scale = coord_system->x_scale;
     int current_pos = abs_origin_point.x;
 
-    while (current_pos + scale < x_coord_line_point_b.x)
+    while (current_pos < x_coord_line_point_b.x)
     {
         drawLine(display, {current_pos + scale, abs_origin_point.y - 2}, 
                           {current_pos + scale, abs_origin_point.y + 2});
@@ -124,10 +124,10 @@ void drawCoordinateStepX(Display* display, CoordinateSystem* coord_system)
     }
 
     current_pos = abs_origin_point.x;
-    while (current_pos - scale > x_coord_line_point_a.x)
+    while (current_pos > x_coord_line_point_a.x)
     {
-        drawLine(display, {current_pos - scale, abs_origin_point.y - 2}, 
-                          {current_pos - scale, abs_origin_point.y + 2});
+        drawLine(display, {current_pos, abs_origin_point.y - 2}, 
+                          {current_pos, abs_origin_point.y + 2});
         current_pos -= scale;
     }
 }
@@ -147,13 +147,12 @@ void drawCoordinateSystem(Display* display, CoordinateSystem* coord_system,
 
     SDL_SetRenderDrawColor(display->renderer, foreground_color);
     
-    //draw y coord line
-    drawLine(display, {coord_system->abs_origin_point.x, coord_system->area.y},
-                      {coord_system->abs_origin_point.x, coord_system->area.y + coord_system->area.h}, 1);
 
-    //draw x coord line
-    drawLine(display, {coord_system->area.x, coord_system->abs_origin_point.y},
-                      {coord_system->area.x + coord_system->area.w, coord_system->abs_origin_point.y}, 1);
+    Vector ox = {coord_system->max_coord.x - coord_system->min_coord.x, 0};
+    Vector oy = {0, coord_system->max_coord.y - coord_system->min_coord.y};
+
+    drawVector(display, coord_system, foreground_color, {0, (double)coord_system->min_coord.y}, oy, 0.05);
+    drawVector(display, coord_system, foreground_color, {(double)coord_system->min_coord.x, 0}, ox, 0.05);
 
     drawCoordSystemSteps(display, coord_system);
 }
