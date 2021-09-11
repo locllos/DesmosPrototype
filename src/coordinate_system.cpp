@@ -1,69 +1,55 @@
 #include "hdr/coordinate_system.h"
 
-void constructCoordinateSystem(CoordinateSystem* coord_system, 
-                               int x_pos, int y_pos, 
-                               int width, int height,
-                               Point min_coord, Point max_coord)
+CoordinateSystem::CoordinateSystem(int x, int y, int width, int height, 
+                                   Vector min_coord, Vector max_coord) :
+    area_({x, y, width, height}), min_coord_(min_coord), max_coord_(max_coord) 
 {
-    coord_system->area.x = x_pos;
-    coord_system->area.y = y_pos;
+    x_scale_ = width  / (max_coord_.x() - min_coord_.x());
+    y_scale_ = height / (max_coord_.y()- min_coord_.y());
 
-    coord_system->area.h = height;
-    coord_system->area.w = width;
-    
-    coord_system->min_coord = min_coord;
-    coord_system->max_coord = max_coord;
-
-    coord_system->x_scale = width  / (max_coord.x - min_coord.x);
-    coord_system->y_scale = height / (max_coord.y - min_coord.y);
-
-    coord_system->abs_origin_point = { (int)(coord_system->x_scale * abs(coord_system->min_coord.x)) + coord_system->area.x, 
-                                       (int)(coord_system->y_scale * abs(coord_system->max_coord.y)) + coord_system->area.y };
+    abs_origin_point_ = { (int)(x_scale_ * abs(min_coord_.x())) + area_.x, 
+                          (int)(y_scale_ * abs(max_coord_.y())) + area_.y };
 
 }
 
-CoordinateSystem* newCoordinateSystem(int x_pos, int y_pos, 
-                                      int width, int height,
-                                      Point min_coord, Point max_coord)
+Rectangle CoordinateSystem::area() const { return area_; };
+PixelPoint CoordinateSystem::abs_origin_point() const { return abs_origin_point_; };
+Vector CoordinateSystem::min_coord() const { return min_coord_; };
+Vector CoordinateSystem::max_coord() const { return max_coord_; };
+int CoordinateSystem::x_scale() { return x_scale_; };
+int CoordinateSystem::y_scale() { return y_scale_; };
+
+CoordinateSystem::CoordinateSystem(int x, int y, int width, int height, 
+                                   int x_min, int y_min, int x_max, int y_max) :
+    area_({x, y, width, height}), min_coord_(Vector(x_min, y_min)), max_coord_(Vector(x_max, y_max)) 
 {
-    CoordinateSystem* coord_system = (CoordinateSystem*)calloc(1, sizeof(CoordinateSystem));
+    x_scale_ = width  / (max_coord_.x() - min_coord_.x());
+    y_scale_ = height / (max_coord_.y()- min_coord_.y());
 
-    constructCoordinateSystem(coord_system, x_pos, y_pos, width, height, min_coord, max_coord);
-
-    return coord_system;
+    abs_origin_point_ = { (int)(x_scale_ * abs(min_coord_.x())) + area_.x, 
+                          (int)(y_scale_ * abs(max_coord_.y())) + area_.y };
 }
 
-SDL_Point getAbsCoordinatesFromRelative(CoordinateSystem* coord_system, Point rel_point)
+
+PixelPoint CoordinateSystem::getAbsCoordinatesFromRelative(Vector& rel_point) const
 {
-    return { (int)(rel_point.x  * coord_system->x_scale) + coord_system->abs_origin_point.x,  
-             (int)(-rel_point.y * coord_system->y_scale) + coord_system->abs_origin_point.y};
+    return { (int)(rel_point.x()  * x_scale_) + abs_origin_point_.x,  
+             (int)(-rel_point.y() * y_scale_) + abs_origin_point_.y};
 }
 
-Point getRelativeCoordinatesFromAbs(CoordinateSystem* coord_system, SDL_Point abs_point)
+Vector CoordinateSystem::getRelativeCoordinatesFromAbs(PixelPoint abs_point) const
 {
-    return {(double)(abs_point.x  - coord_system->abs_origin_point.x) / coord_system->x_scale, 
-            (double)(-abs_point.y + coord_system->abs_origin_point.y) / coord_system->y_scale};
+    return Vector((abs_point.x  - abs_origin_point_.x) / x_scale_, 
+                  (-abs_point.y + abs_origin_point_.y) / y_scale_);
 }
 
-Point pointAdd(Point point_a, Point point_b)
+bool CoordinateSystem::isWithinCoordSystem(PixelPoint point) const
 {
-    return {point_a.x + point_b.x, point_a.y + point_b.y};
+    return area_.x <= point.x && (area_.x + area_.width) >= point.x &&
+           area_.y <= point.y && (area_.y + area_.height) >= point.y;
 }
 
-bool isEqual(SDL_Point point_a, SDL_Point point_b)
+bool CoordinateSystem::isWithinCoordSystem(Vector point) const
 {
-    return (point_a.x == point_b.x) && (point_a.y == point_b.y);
-}
-
-bool isWithinCoordSystem(CoordinateSystem* coord_system, SDL_Point point)
-{
-    return coord_system->area.x <= point.x && (coord_system->area.x + coord_system->area.w) >= point.x &&
-           coord_system->area.y <= point.y && (coord_system->area.y + coord_system->area.h) >= point.y;
-}
-
-CoordinateSystem* deleteCoordinateSystem(CoordinateSystem* coord_system)
-{
-    free(coord_system);
-
-    return nullptr;
+    return isWithinCoordSystem(getAbsCoordinatesFromRelative(point));
 }

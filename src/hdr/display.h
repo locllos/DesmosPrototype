@@ -1,37 +1,51 @@
-#ifndef DISPLAY_HEADER
-#define DISPLAY_HEADER
+#pragma once
 
-#include <SDL2/SDL.h>
-#include <SDL2/SDL_ttf.h>
+#include "coordinate_system.h"
 
-struct Display
+const double ARROW_FACTOR_SIZE = 0.1;
+
+struct Line
 {
-    SDL_Window* window;
-    SDL_Renderer* renderer;
-    SDL_Surface* surface;
+    PixelPoint point_a;
+    PixelPoint point_b;
 
+    size_t thickness;
 };
 
+class Display
+{
+private:
 
-void SDL_SetRenderDrawColor (SDL_Renderer* renderer, SDL_Color color);
-void SDL_RenderDrawLine     (SDL_Renderer* renderer, SDL_Point point_a, SDL_Point point_b);
 
-SDL_Texture* loadTextOnce (const char* message, const char* font_filename,
-                           SDL_Color color, size_t font_size, SDL_Renderer *renderer);
-void         renderTexture(SDL_Texture* texture, SDL_Renderer* renderer, 
-                           int coord_x, int coord_y);
+    void drawCoordinateStepX(CoordinateSystem& coord_system);
+    void drawCoordinateStepY(CoordinateSystem& coord_system);
+    void drawCoordSystemSteps(CoordinateSystem& coord_system);
+    void drawLineStep(CoordinateSystem& coord_system, 
+                      PixelPoint abs_first_point, PixelPoint abs_second_point);
 
-void constructDisplay       (Display* display,   
-                             const char* title, 
-                             int x_pos =  SDL_WINDOWPOS_CENTERED, int y_pos =  SDL_WINDOWPOS_CENTERED,
-                             int width = 1024, int height = 768);
-                      
-void destructDisplay        (Display* display);
+public:
+    
+    Window* window;
+    Renderer* renderer;
 
-Display* newDisplay         (const char* title,
-                             int x_pos =  SDL_WINDOWPOS_CENTERED, int y_pos =  SDL_WINDOWPOS_CENTERED,
-                             int width = 1024, int height = 768);
+public:
 
-Display* deleteDisplay      (Display* display);
+    Display() = delete;
+    
+    Display(const char* title, 
+            size_t x_pos =  SDL_WINDOWPOS_CENTERED, size_t y_pos =  SDL_WINDOWPOS_CENTERED,
+            size_t width = 1024, size_t height = 768);
 
-#endif 
+    void drawLine(Line line);
+    void drawLine(PixelPoint point_a, PixelPoint point_b, size_t thickness = 1);
+    void drawVector(CoordinateSystem& coord_system, Color color, 
+                    Vector& begin_point, Vector& vector, double arrow_factor_size = ARROW_FACTOR_SIZE);
+    void drawCoordinateSystem(CoordinateSystem& coord_system, 
+                              Color background_color, Color foreground_color);
+    void drawCoordinateFunction(CoordinateSystem& coord_system, Color color, 
+                                double (*function)(double), double step);
+
+
+    ~Display();
+
+};

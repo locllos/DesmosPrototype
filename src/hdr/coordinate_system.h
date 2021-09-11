@@ -1,44 +1,40 @@
-#include "display.h"
+#pragma once
+
+#include "renderer.h"
+#include "vector.h"
 
 
-struct Point
+class CoordinateSystem
 {
-    double x;
-    double y;
+private:
+    
+    Rectangle area_;
+    PixelPoint abs_origin_point_;
+
+    Vector min_coord_;
+    Vector max_coord_;
+
+    int x_scale_;
+    int y_scale_;
+
+public:
+
+    CoordinateSystem(int x, int y, int width, int height, Vector min_coord, Vector max_coord); 
+    CoordinateSystem(int x, int y, int width, int height, int x_min, int y_min, int x_max, int y_max);
+
+    Rectangle area() const;
+    PixelPoint abs_origin_point() const;
+    Vector min_coord() const;
+    Vector max_coord() const;
+    int x_scale();
+    int y_scale();
+
+    PixelPoint getAbsCoordinatesFromRelative(Vector& rel_point) const;
+
+    Vector getRelativeCoordinatesFromAbs(PixelPoint abs_point) const;
+
+    bool isWithinCoordSystem(PixelPoint point) const;
+    bool isWithinCoordSystem(Vector point) const;
+
+    ~CoordinateSystem() = default;
 };
-
-struct CoordinateSystem
-{
-    SDL_Rect area;
-    SDL_Point abs_origin_point; // в пикселях
-
-    Point min_coord;
-    Point max_coord;
-
-    int x_scale;                  // чем равна одна единица координат в пикселях
-    int y_scale;                  // чем равна одна единица координат в пикселях
-};
-
-// I know, I know, it's the same as Point, but you dont understand, it's another
-struct Vector
-{
-    double x_component;
-    double y_component;
-};
-
-void constructCoordinateSystem(CoordinateSystem* coord_system, 
-                               int x_pos, int y_pos, 
-                               int width, int height,
-                               Point min_coord, Point max_coord);
-CoordinateSystem* newCoordinateSystem(int x_pos, int y_pos, 
-                                      int width, int height,
-                                      Point min_coord, Point max_coord);
-CoordinateSystem* deleteCoordinateSystem(CoordinateSystem* coord_system);
-
-SDL_Point getAbsCoordinatesFromRelative(CoordinateSystem* coord_system, Point rel_point);
-
-Point getRelativeCoordinatesFromAbs(CoordinateSystem* coord_system, SDL_Point abs_point);
-Point pointAdd(Point point_a, Point point_b);
-
-bool      isEqual                      (SDL_Point point_a, SDL_Point point_b);
-bool      isWithinCoordSystem          (CoordinateSystem* coord_system, SDL_Point point);

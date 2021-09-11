@@ -1,9 +1,9 @@
-#include "hdr/draw.h"
+#include "hdr/display.h"
 #include <stdio.h>
 
 const size_t POINTS_COUNT = 4;
 
-const SDL_Point points[POINTS_COUNT] = 
+const PixelPoint points[POINTS_COUNT] = 
 {
     {320, 200},
     {300, 240},
@@ -11,8 +11,14 @@ const SDL_Point points[POINTS_COUNT] =
     {320, 200}
 };
 
-SDL_Color RED = {255, 0, 0, 255}; 
-SDL_Color GREEN = {0, 255, 0, 255};
+Color RED = {255, 0, 0, 255}; 
+Color GREEN = {0, 255, 0, 255};
+Color LIGHT_BLUE = {232, 244, 248, 255};
+Color YELLOW = {255, 255, 0, 255};
+Color LIME_GREEN = {232, 248, 236, 255};
+Color BLUE = {67, 165, 198, 255};
+
+double ANGLE_STEP = atan(1) / 6;
 
 double functionParabola(double x)
 {
@@ -22,36 +28,35 @@ double functionParabola(double x)
 int main()
 {
     
-    Display* display = newDisplay("Privet Medved!");
+    Display display("Privet Medved!");
     
-    CoordinateSystem* coord_system_a = newCoordinateSystem(25, 25, 400, 400, {-3, -3}, {5, 5});
-    drawCoordinateSystem(display, coord_system_a, {255, 255, 255, 255}, {0, 0, 0, 255});
-    drawCoordinateFunction(display, coord_system_a, RED, functionParabola, 0.1);
+    CoordinateSystem coord_system_a(25, 25, 500, 650, {-3, -4}, {5, 5});
+    CoordinateSystem coord_system_b(550, 75, 450, 450, {-1, -1}, {3, 3});
 
-    CoordinateSystem* coord_system_b = newCoordinateSystem(450, 25, 300, 300, {-1, -1}, {2, 2});
-    drawCoordinateSystem(display, coord_system_b, {255, 255, 255, 255}, {0, 0, 0, 255});
-    drawCoordinateFunction(display, coord_system_b, RED, functionParabola, 0.05);
-
-    Vector vector_a = {1, 1};
-    Vector vector_b = {0, 1.5};
-    Point begin_point_a = {0.5, 0.5};
-    Point begin_point_b = {1.5, functionParabola(1.5)};
-    drawVector(display, coord_system_a, GREEN, begin_point_a, vector_a);
-    drawVector(display, coord_system_b, GREEN, begin_point_a, vector_a);
-    drawVector(display, coord_system_b, GREEN, begin_point_b, vector_b);
-
-    SDL_RenderPresent(display->renderer);
+    Vector vector(0, 0.75);
+    Vector begin_point(1.5, functionParabola(1.5));
 
     bool quit = false;
     SDL_Event event = {};
+    
     while (!quit)
-    {
+    {   
+        display.renderer->Clear();
         while (SDL_PollEvent(&event))
         {
             quit = event.type == SDL_QUIT;
         }
-    }
-    display = deleteDisplay(display);
+        display.drawCoordinateSystem(coord_system_a, LIGHT_BLUE, {0, 0, 0, 255});
+        display.drawCoordinateFunction(coord_system_a, RED, functionParabola, 0.1);
+        display.drawCoordinateSystem(coord_system_b, LIGHT_BLUE, {0, 0, 0, 255});
+        display.drawCoordinateFunction(coord_system_b, RED, functionParabola, 0.05);
 
+        display.drawVector(coord_system_b, GREEN, begin_point, vector);
+
+        vector.Rotate(ANGLE_STEP / 50);
+
+        display.renderer->setDrawColor(BLUE);
+        display.renderer->Present();
+    }
     return 0;
 }
